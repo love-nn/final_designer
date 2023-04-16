@@ -100,8 +100,8 @@ public:
     }
 };
 
-nnysl::ConfigVar<Person>::ptr g_person = 
-    nnysl::Config::Lookup("class.person", Person() , "system person") ;
+// nnysl::ConfigVar<Person>::ptr g_person = 
+//     nnysl::Config::Lookup("class.person", Person() , "system person") ;
 
 
 void test_class() {
