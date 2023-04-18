@@ -139,6 +139,9 @@ public:
 nnysl::ConfigVar<Person>::ptr g_person = 
     nnysl::Config::Lookup("class.person", Person() , "system person") ;
 
+nnysl::ConfigVar<std::map<std::string , Person> >::ptr g_person = 
+    nnysl::Config::Lookup("class.map", std::map<std::string , Person>(), "system person") ;
+
 
 void test_class() {
     NNYSL_LOG_INFO(NNYSL_LOG_ROOT()) << "before" << g_person->getValue().toString() << " - " << g_person->toString() ;

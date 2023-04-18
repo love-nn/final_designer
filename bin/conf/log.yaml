@@ -26,3 +26,10 @@ system:
     test: 30
     v: 25
     k3 : 10
+
+class:
+  person:
+    name: 赵凯朦
+    age: 31
+    sex: true
+    
