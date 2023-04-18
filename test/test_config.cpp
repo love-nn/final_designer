@@ -89,6 +89,10 @@ public:
     int m_age = 0;
     bool m_sex = 0;
     
+    bool operator==(const Person& oth) const {
+        return m_name == oth.m_name && m_age == oth.m_age && m_sex == oth.m_sex ; 
+    } 
+
     std::string toString() const {
         std::stringstream ss ;
         ss << "[Person name=" << m_name 
@@ -139,11 +143,17 @@ public:
 nnysl::ConfigVar<Person>::ptr g_person = 
     nnysl::Config::Lookup("class.person", Person() , "system person") ;
 
-nnysl::ConfigVar<std::map<std::string , Person> >::ptr g_person = 
+nnysl::ConfigVar<std::map<std::string , Person> >::ptr g_person_map = 
     nnysl::Config::Lookup("class.map", std::map<std::string , Person>(), "system person") ;
 
 
 void test_class() {
+    
+    g_person->addListener(10, [](const Person& old_value, const Person& new_value) {
+        NNYSL_LOG_INFO(NNYSL_LOG_ROOT()) << " old value = " << old_value.toString() << " new value = " << new_value.toString() ;
+
+    });
+    
     NNYSL_LOG_INFO(NNYSL_LOG_ROOT()) << "before" << g_person->getValue().toString() << " - " << g_person->toString() ;
     
     YAML::Node root = YAML::LoadFile("/home/nnysl/final/final_designer/bin/conf/log.yaml") ;
@@ -151,6 +161,7 @@ void test_class() {
 
     NNYSL_LOG_INFO(NNYSL_LOG_ROOT()) << "after" << g_person->getValue().toString() << " - " << g_person->toString() ;
     
+
 }
 
 int main() {

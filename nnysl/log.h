@@ -43,6 +43,8 @@
 
 #define NNYSL_LOG_ROOT() nnysl::LoggerMgr::GetInstance()->getRoot()
 
+#define NNYSL_LOG_NAME(name) nnysl::LoggerMgr::GetInstance()->getLogger(name)
+
 
 namespace nnysl{
 
