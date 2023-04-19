@@ -13,23 +13,4 @@ logs:
       - type: FileLogAppender
         path: log.txt
       - type: StdoutLogAppender
-system:
-  port: 9900
-  value: 15
-  int_vec:
-    - 10
-    - 30
-  int_list: [20,30,40,50]
-  int_set: [30,50,20,10,10]
-  int_unordered_set: [30,50,20,10,10]
-  map:
-    test: 30
-    v: 25
-    k3 : 10
-
-class:
-  person:
-    name: 赵凯朦
-    age: 31
-    sex: true
     

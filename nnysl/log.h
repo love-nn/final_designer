@@ -15,6 +15,7 @@
 #include <stdarg.h>
 #include "./singleton.h"
 #include "./util.h"
+#include "./config.h"
 
 #define NNYSL_LOG_LEVEL(logger,level) \
     if(logger->getLevel() <= level) \
@@ -49,7 +50,7 @@
 namespace nnysl{
 
 class Logger;
-
+class LoggerManager ; 
 // 日志级别
 class LogLevel {
 public :
@@ -62,8 +63,9 @@ public :
         FATAL = 5
         
     };
-
     static const char* toString ( LogLevel::Level level );
+    static LogLevel::Level fromString ( std::string& level );
+
 };
 // 日志格式信息
 class LogEvent{
@@ -125,10 +127,13 @@ public:
             virtual void format(std::ostream& os, std::shared_ptr<Logger> logger , LogLevel::Level level ,  LogEvent::ptr event) = 0 ;
         
     };
-    void init() ;  
+    void init() ;
+    bool isError() const { return m_error ; } 
+    void setError() { m_error = true ; } 
 private:
     std::string m_pattern ; 
     std::vector<FormatItem::ptr> m_items ;
+    bool m_error = false ; 
 };
 
 class MessageFormatItem : public LogFormatter::FormatItem {
@@ -239,6 +244,7 @@ public :
 
     virtual void log(std::shared_ptr<Logger> logger , LogLevel::Level level, LogEvent::ptr event) = 0 ;
     void setFormatter(LogFormatter::ptr val ) { m_formatter = val; }
+    void setLevel(LogLevel::Level val )  { m_level = val ; } 
     LogFormatter::ptr getFormatter() { return m_formatter; } 
 protected :
     LogLevel::Level m_level = LogLevel::DEBUG; 
@@ -249,7 +255,7 @@ protected :
 
 // 日志器  
 class Logger : public std::enable_shared_from_this<Logger> {
-
+friend class LoggerManager ;
 public :
     typedef std::shared_ptr<Logger> ptr;
     Logger(const std::string& name = "root" ) ;
@@ -264,17 +270,23 @@ public :
 
     void addAppender(LogAppender::ptr appender) ;
     void delAppender(LogAppender::ptr appender) ;
-    
+    void clearAppenders() ;
+
     LogLevel::Level getLevel() const { return m_level; } 
     const std::string& getName() const { return m_name; }
 
+    void setLevel(LogLevel::Level level ) { m_level = level ; }
+    void setFormatter(LogFormatter::ptr val ) ;
+    void setFormatter(const std::string& val ) ;
+
+    LogFormatter::ptr getFormatter() const ;
     
 private:
     std::string m_name ;            // 日志名称
     LogLevel::Level m_level;        // 日志器级别
     std::list<LogAppender::ptr> m_appenders ;  // 日志器 输出位置集合
     LogFormatter::ptr m_formatter ;
-
+    Logger::ptr m_root ;
 };
 
 // 输出到控制台Appender
@@ -317,6 +329,7 @@ private:
 typedef nnysl::Singleton<LoggerManager> LoggerMgr ; 
 
 }
+
 
 
 #endif

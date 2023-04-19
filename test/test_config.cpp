@@ -1,5 +1,5 @@
 
-#include "../nnysl/config.hpp"
+#include "../nnysl/config.h"
 #include "../nnysl/log.h"
 #include <yaml-cpp/yaml.h>
 

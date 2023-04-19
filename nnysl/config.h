@@ -17,8 +17,11 @@
 #include <sys/types.h>
 
 
+
+
 namespace nnysl
 {
+
 
 class ConfigVarBase {
 public:
@@ -282,7 +285,7 @@ public :
         }
         catch(const std::exception& e)
         {
-            NNYSL_LOG_ERROR(NNYSL_LOG_ROOT()) << "ConfigVar::toString exception"
+            NNYSL_LOG_INFO(NNYSL_LOG_ROOT()) << "ConfigVar::toString exception"
                 << e.what() << " convert : " << typeid(m_val).name() << "to stirng" ;
         }
         return "" ;
@@ -299,7 +302,7 @@ public :
         }
         catch(const std::exception& e)
         {
-            NNYSL_LOG_ERROR(NNYSL_LOG_ROOT()) << "ConfigVar::fromString exception"
+            NNYSL_LOG_INFO(NNYSL_LOG_ROOT()) << "ConfigVar::fromString exception"
                 << e.what() << " convert : string to " << typeid(m_val).name()  ;
             return false;
         }
@@ -348,17 +351,20 @@ private :
 
 };
 
+
 // 配置模块
 class Config {
 public:
  
     typedef std::unordered_map<std::string, ConfigVarBase::ptr> ConfigVarMap ;
     
+
+
     template<class T> 
     static typename ConfigVar<T>::ptr Lookup(const std::string& name
         , const T& default_value, const std::string& description= "")  {
-        auto it = m_datas.find(name) ;
-        if ( it != m_datas.end() ) {
+        auto it = GetDatas().find(name) ;
+        if ( it != GetDatas().end() ) {
             auto tmp = std::dynamic_pointer_cast<ConfigVar<T> > ( it->second ) ;
             if ( tmp ) {
                 NNYSL_LOG_INFO(NNYSL_LOG_ROOT()) << "Lookup name = " << name << "exists " ;
@@ -378,14 +384,14 @@ public:
             throw std::invalid_argument(name);
         }
         typename ConfigVar<T>::ptr v(new ConfigVar<T>(name, default_value, description)) ;
-        m_datas[name] = v ;
+        GetDatas()[name] = v ;
         return v ;
     }
 
     template<class T>
     static typename ConfigVar<T>::ptr Lookup(const std::string& name )  {
-        auto it = m_datas.find(name) ; 
-        if ( it == m_datas.end() )  return nullptr ;
+        auto it = GetDatas().find(name) ; 
+        if ( it == GetDatas().end() )  return nullptr ;
         return std::dynamic_pointer_cast<ConfigVar<T>>(it->second) ;
 
     }
@@ -394,7 +400,11 @@ public:
     
     
 private:
-    static ConfigVarMap m_datas ;
+    static ConfigVarMap& GetDatas() {
+        static ConfigVarMap m_datas ;
+        return m_datas ;
+    }
+    
 };
 
 
