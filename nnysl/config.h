@@ -5,7 +5,7 @@
 #include <sstream>
 #include <string>
 #include <boost/lexical_cast.hpp>
-#include "./log.h"
+
 #include "yaml-cpp/yaml.h"
 #include <vector>
 #include <map>
@@ -15,7 +15,7 @@
 #include <unordered_map>
 #include <functional>
 #include <sys/types.h>
-
+#include "log.h"
 
 
 
@@ -174,6 +174,7 @@ public:
         for ( size_t i = 0 ; i < node.size() ; ++ i ) {
             ss.str("");
             ss << node[i] ;
+            std::cout << ss.str() ;
             vec.insert(LexicalCast<std::string, T>()(ss.str())) ;
 
         }

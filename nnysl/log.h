@@ -15,7 +15,7 @@
 #include <stdarg.h>
 #include "./singleton.h"
 #include "./util.h"
-#include "./config.h"
+
 
 #define NNYSL_LOG_LEVEL(logger,level) \
     if(logger->getLevel() <= level) \

@@ -2,7 +2,7 @@
 #include "../nnysl/config.h"
 #include "../nnysl/log.h"
 #include <yaml-cpp/yaml.h>
-
+/**
 
 nnysl::ConfigVar<int>::ptr g_int_value_config = 
 nnysl::Config::Lookup("system.port",(int)8080,"system port") ;
@@ -140,33 +140,42 @@ public:
 
 }
 
-nnysl::ConfigVar<Person>::ptr g_person = 
-    nnysl::Config::Lookup("class.person", Person() , "system person") ;
+// nnysl::ConfigVar<Person>::ptr g_person = 
+//     nnysl::Config::Lookup("class.person", Person() , "system person") ;
 
-nnysl::ConfigVar<std::map<std::string , Person> >::ptr g_person_map = 
-    nnysl::Config::Lookup("class.map", std::map<std::string , Person>(), "system person") ;
+// nnysl::ConfigVar<std::map<std::string , Person> >::ptr g_person_map = 
+//     nnysl::Config::Lookup("class.map", std::map<std::string , Person>(), "system person") ;
 
 
-void test_class() {
+// void test_class() {
     
-    g_person->addListener(10, [](const Person& old_value, const Person& new_value) {
-        NNYSL_LOG_INFO(NNYSL_LOG_ROOT()) << " old value = " << old_value.toString() << " new value = " << new_value.toString() ;
+//     g_person->addListener(10, [](const Person& old_value, const Person& new_value) {
+//         NNYSL_LOG_INFO(NNYSL_LOG_ROOT()) << " old value = " << old_value.toString() << " new value = " << new_value.toString() ;
 
-    });
+//     });
     
-    NNYSL_LOG_INFO(NNYSL_LOG_ROOT()) << "before" << g_person->getValue().toString() << " - " << g_person->toString() ;
+//     NNYSL_LOG_INFO(NNYSL_LOG_ROOT()) << "before" << g_person->getValue().toString() << " - " << g_person->toString() ;
     
+//     YAML::Node root = YAML::LoadFile("/home/nnysl/final/final_designer/bin/conf/log.yaml") ;
+//     nnysl::Config::LoadFromYaml(root) ;
+
+//     NNYSL_LOG_INFO(NNYSL_LOG_ROOT()) << "after" << g_person->getValue().toString() << " - " << g_person->toString() ;
+    
+
+// }
+**/
+
+void test_log() {
     YAML::Node root = YAML::LoadFile("/home/nnysl/final/final_designer/bin/conf/log.yaml") ;
     nnysl::Config::LoadFromYaml(root) ;
-
-    NNYSL_LOG_INFO(NNYSL_LOG_ROOT()) << "after" << g_person->getValue().toString() << " - " << g_person->toString() ;
-    
 
 }
 
 int main() {
+    // NNYSL_LOG_ROOT() ;
+    // NNYSL_LOG_INFO(NNYSL_LOG_ROOT() ) << "test test " ;
     // test_config() ;
-    test_class() ;
-    
+    // test_class() ;
+    test_log() ;   
     return 0 ;
 }

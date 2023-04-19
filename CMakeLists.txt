@@ -13,9 +13,9 @@ find_package(YAML-CPP REQUIRED COMPONENTS
 
 
 set(LIB_SRC
+
     nnysl/log.cpp
     nnysl/util.cpp
-    # nnysl/config.hpp
     nnysl/config.cpp
     )
 
