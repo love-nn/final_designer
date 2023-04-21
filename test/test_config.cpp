@@ -166,9 +166,16 @@ public:
 **/
 
 void test_log() {
+    static nnysl::Logger::ptr system_log = NNYSL_LOG_NAME("system") ;
+    NNYSL_LOG_INFO(system_log) << "hello system" << std::endl; 
+
+    std::cout << nnysl::LoggerMgr::GetInstance()->toYamlString() << std::endl; 
     YAML::Node root = YAML::LoadFile("/home/nnysl/final/final_designer/bin/conf/log.yaml") ;
     nnysl::Config::LoadFromYaml(root) ;
-
+    std::cout << nnysl::LoggerMgr::GetInstance()->toYamlString() << std::endl; 
+    
+    NNYSL_LOG_INFO(system_log) << "hello system" << std::endl; 
+    std::cout << "-----------------------" << std::endl; 
 }
 
 int main() {

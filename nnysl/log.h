@@ -127,6 +127,8 @@ public:
             virtual void format(std::ostream& os, std::shared_ptr<Logger> logger , LogLevel::Level level ,  LogEvent::ptr event) = 0 ;
         
     };
+
+    std::string getPattern() const {   return m_pattern ; } 
     void init() ;
     bool isError() const { return m_error ; } 
     void setError() { m_error = true ; } 
@@ -238,17 +240,23 @@ private:
 
 // 日志输出 
 class LogAppender {
+friend class Logger ; 
 public :
     typedef std::shared_ptr<LogAppender> ptr;
     virtual ~LogAppender() {} ;
 
+    virtual std::string toYamlString() = 0 ;
+
     virtual void log(std::shared_ptr<Logger> logger , LogLevel::Level level, LogEvent::ptr event) = 0 ;
-    void setFormatter(LogFormatter::ptr val ) { m_formatter = val; }
+    void setFormatter(LogFormatter::ptr val );
     void setLevel(LogLevel::Level val )  { m_level = val ; } 
     LogFormatter::ptr getFormatter() { return m_formatter; } 
+
 protected :
     LogLevel::Level m_level = LogLevel::DEBUG; 
     LogFormatter::ptr m_formatter;
+
+    bool m_have_formatter = false ; 
 };
 
 
@@ -281,6 +289,8 @@ public :
 
     LogFormatter::ptr getFormatter() const ;
     
+    std::string toYamlString() ;
+
 private:
     std::string m_name ;            // 日志名称
     LogLevel::Level m_level;        // 日志器级别
@@ -294,6 +304,7 @@ class StdoutLogAppender : public LogAppender {
 public :
     typedef std::shared_ptr<StdoutLogAppender> ptr;
     virtual void log(std::shared_ptr<Logger> logger , LogLevel::Level level , LogEvent::ptr event) override ;
+    std::string toYamlString() override ;
 private :
 
 };
@@ -304,6 +315,7 @@ public:
     typedef std::shared_ptr<FileLogAppender> ptr;
     FileLogAppender(const std::string& filename ) ;
     virtual void log(std::shared_ptr<Logger> logger , LogLevel::Level level , LogEvent::ptr event) override ;
+    std::string toYamlString() override ;
 
     bool reopen() ;  // 重新打开文件 成功-1 失败- 0 
 private:
@@ -318,7 +330,8 @@ public:
     LoggerManager() ;
     Logger::ptr getLogger(const std::string& name) ;
     Logger::ptr getRoot() { return m_root ; }
-    
+    std::string toYamlString() ;
+
     void init() ;
 private:
     std::map<std::string, Logger::ptr> m_loggers;
