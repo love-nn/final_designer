@@ -15,6 +15,7 @@
 #include <stdarg.h>
 #include "./singleton.h"
 #include "./util.h"
+#include "thread.h"
 
 
 #define NNYSL_LOG_LEVEL(logger,level) \
@@ -243,6 +244,7 @@ class LogAppender {
 friend class Logger ; 
 public :
     typedef std::shared_ptr<LogAppender> ptr;
+    typedef SpinLock MutexType ;
     virtual ~LogAppender() {} ;
 
     virtual std::string toYamlString() = 0 ;
@@ -250,13 +252,15 @@ public :
     virtual void log(std::shared_ptr<Logger> logger , LogLevel::Level level, LogEvent::ptr event) = 0 ;
     void setFormatter(LogFormatter::ptr val );
     void setLevel(LogLevel::Level val )  { m_level = val ; } 
-    LogFormatter::ptr getFormatter() { return m_formatter; } 
+    LogFormatter::ptr getFormatter();
 
 protected :
     LogLevel::Level m_level = LogLevel::DEBUG; 
     LogFormatter::ptr m_formatter;
 
     bool m_have_formatter = false ; 
+
+    MutexType m_mutex ;
 };
 
 
@@ -266,6 +270,7 @@ class Logger : public std::enable_shared_from_this<Logger> {
 friend class LoggerManager ;
 public :
     typedef std::shared_ptr<Logger> ptr;
+    typedef SpinLock MutexType;
     Logger(const std::string& name = "root" ) ;
 
     void log( LogLevel::Level level, LogEvent::ptr event);
@@ -287,7 +292,7 @@ public :
     void setFormatter(LogFormatter::ptr val ) ;
     void setFormatter(const std::string& val ) ;
 
-    LogFormatter::ptr getFormatter() const ;
+    LogFormatter::ptr getFormatter()  ;
     
     std::string toYamlString() ;
 
@@ -297,6 +302,7 @@ private:
     std::list<LogAppender::ptr> m_appenders ;  // 日志器 输出位置集合
     LogFormatter::ptr m_formatter ;
     Logger::ptr m_root ;
+    MutexType m_mutex ;
 };
 
 // 输出到控制台Appender
@@ -328,6 +334,7 @@ private:
 class LoggerManager {
 public:
     LoggerManager() ;
+    typedef SpinLock MutexType ;
     Logger::ptr getLogger(const std::string& name) ;
     Logger::ptr getRoot() { return m_root ; }
     std::string toYamlString() ;
@@ -336,7 +343,7 @@ public:
 private:
     std::map<std::string, Logger::ptr> m_loggers;
     Logger::ptr m_root;
-    
+    MutexType m_mutex ;
 };
 
 typedef nnysl::Singleton<LoggerManager> LoggerMgr ; 

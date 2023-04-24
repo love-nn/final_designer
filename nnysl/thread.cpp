@@ -9,6 +9,48 @@ static thread_local std::string t_thread_name = "UNKOWN" ;
 
 static nnysl::Logger::ptr g_logger = NNYSL_LOG_NAME("system") ;
 
+
+Semaphore::Semaphore(uint32_t count) {
+    if(sem_init(&m_semaphore, 0, count ) ) {
+        throw std::logic_error("sem_init error") ;
+    }
+    
+}
+
+Semaphore::~Semaphore() {
+    sem_destroy(&m_semaphore) ;
+
+}
+
+void Semaphore::wait() {
+    while(true) {
+        int flag = sem_wait(&m_semaphore) ;
+        if(!flag){
+            return ;
+        }
+        switch (flag)
+        {
+#define XX(type) case type: \
+    throw std::logic_error("sem_init" #type "error") ;\
+        break;      
+        XX(EINVAL) 
+        XX(EAGAIN)
+        XX(ETIMEDOUT)
+#undef XX
+        default:
+            throw std::logic_error("sem_wait error") ;
+            break;
+        }
+    }
+}
+
+void Semaphore::notify() {
+    if(sem_post(&m_semaphore)) {
+        throw std::logic_error("sem_post error") ;
+    }
+}
+
+
 Thread* Thread::GetThis() {
     return t_thread ;
 }
@@ -36,6 +78,7 @@ Thread::Thread(std::function<void()> cb, const std::string& name )
         rt << " name = " << name ;
         throw std::logic_error("pthread_create error") ;
     }
+    m_semaphore.wait() ;
 
 }
 
@@ -71,6 +114,8 @@ void* Thread::run(void* arg) {
     pthread_setname_np(pthread_self(), thread->m_name.substr(0,15).c_str()) ;
     std::function<void() > cb ;
     cb.swap(thread->m_cb) ;
+    
+    thread->m_semaphore.notify() ;
     cb() ;
     return 0 ;
 }

@@ -106,6 +106,7 @@ Logger::Logger(const std::string& name)
  */
 void Logger::log(LogLevel::Level level, LogEvent::ptr event){
     if ( level >= m_level ) {
+        MutexType::Lock lock(m_mutex) ;
         if ( !m_appenders.empty() ) {
             auto self = shared_from_this() ;
             
@@ -144,7 +145,9 @@ void Logger::error(LogEvent::ptr event ) {
  * @param appender: LogAppender 对象的shared_ptr
  */
 void Logger::addAppender(LogAppender::ptr appender) {
+    MutexType::Lock lock(m_mutex) ;
     if ( !appender->getFormatter() ) {
+        MutexType::Lock appenderLock(appender->m_mutex) ;
         appender->m_formatter = m_formatter ;
     }
     m_appenders.push_back(appender) ;
@@ -156,6 +159,7 @@ void Logger::addAppender(LogAppender::ptr appender) {
  * @param appender: LogAppender 对象的shared_ptr
  */
 void Logger::delAppender(LogAppender::ptr appender) {
+    MutexType::Lock lock(m_mutex) ;
     for (auto it  = m_appenders.begin() ;
               it != m_appenders.end() ; it ++ ){
             if ( *it == appender ) {
@@ -173,8 +177,10 @@ void Logger::clearAppenders() {
 
 
 void Logger::setFormatter(LogFormatter::ptr val ) {
+    MutexType::Lock lock (m_mutex) ;
     m_formatter = val ;
     for ( auto& i : m_appenders) {
+        MutexType::Lock apenderLock(i->m_mutex) ;
         if ( !i->m_have_formatter ) {
             i->m_formatter = m_formatter ;
         }
@@ -187,15 +193,18 @@ void Logger::setFormatter(const std::string& val ) {
         std::cout << "Logger setFormatter name=" << m_name << "value=" << val << " invalid formatter" ;
         return ;
     }
-    m_formatter = new_val ; 
+    // m_formatter = new_val ; 
+    setFormatter(new_val) ;
 }
 
-LogFormatter::ptr Logger::getFormatter() const {
+LogFormatter::ptr Logger::getFormatter() {
+    MutexType::Lock lock(m_mutex) ;
     return m_formatter;
 }
 
 
 std::string Logger::toYamlString() {
+    MutexType::Lock lock(m_mutex) ;
     YAML::Node node ;
     node ["name"] = m_name ;
     node ["level"] = LogLevel::toString(m_level) ;
@@ -235,12 +244,19 @@ std::string LogFormatter::format(std::shared_ptr<Logger> logger , LogLevel::Leve
 }
 
 void LogAppender::setFormatter(LogFormatter::ptr val ) {
+    MutexType::Lock lock(m_mutex);
     m_formatter = val; 
     if ( m_formatter )  m_have_formatter = true;
     else    m_have_formatter = false ;
 }
 
+LogFormatter::ptr LogAppender::getFormatter() {
+    MutexType::Lock lock(m_mutex) ;
+    return m_formatter ;
+}
+
 bool FileLogAppender::reopen() {
+    MutexType::Lock lock(m_mutex);
     if ( m_filestream ) {
         m_filestream.close() ;
     }
@@ -250,6 +266,7 @@ bool FileLogAppender::reopen() {
 
 
 std::string FileLogAppender::toYamlString() {
+        MutexType::Lock lock(m_mutex) ;
         YAML::Node node ;
         node["type"] = "FileLogAppender" ;
         node["file"] = m_filename ;
@@ -263,6 +280,7 @@ std::string FileLogAppender::toYamlString() {
 }
 
 std::string StdoutLogAppender::toYamlString() {
+        MutexType::Lock lock(m_mutex) ;
         YAML::Node node ;
         node["type"] = "StdoutLogAppender" ;
         if ( m_level != LogLevel::UNKNOW )
@@ -276,6 +294,7 @@ std::string StdoutLogAppender::toYamlString() {
 
 void StdoutLogAppender::log(std::shared_ptr<Logger> logger, LogLevel::Level level , LogEvent::ptr event ) {
     if ( level >= m_level ) {
+        MutexType::Lock lock(m_mutex) ;
         std::cout << m_formatter->format(logger, level , event);
     }
 }
@@ -286,7 +305,9 @@ FileLogAppender::FileLogAppender( const std::string& filename)
 
 void FileLogAppender::log(std::shared_ptr<Logger> logger, LogLevel::Level level , LogEvent::ptr event ) {
     if ( level >= m_level ) {
+        MutexType::Lock lock(m_mutex) ;
         if ( reopen() ) {
+    
             m_filestream << m_formatter->format(logger , level , event) ;
         }
         
@@ -502,7 +523,7 @@ LoggerManager::LoggerManager() {
 }
 
 Logger::ptr LoggerManager::getLogger(const std::string& name) {
-    
+    MutexType::Lock lock(m_mutex) ;
     auto it = m_loggers.find(name) ;
     if ( it != m_loggers.end() ) {
         return it -> second ;
@@ -798,7 +819,6 @@ struct LogIniter {
             }
         });
     }
-    
 };
 
 static LogIniter __log_init ; 
@@ -807,6 +827,7 @@ void LoggerManager::init() {
 }
 
 std::string LoggerManager::toYamlString() {
+    MutexType::Lock lock(m_mutex) ;
     YAML::Node node ;
     for ( auto& i : m_loggers ) {
         node.push_back(YAML::Load(i.second->toYamlString()));
