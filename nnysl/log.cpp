@@ -268,6 +268,7 @@ bool FileLogAppender::exists (const std::string& name) {
   return (stat (name.c_str(), &buffer) == 0); 
 }
 
+
 std::string FileLogAppender::toYamlString() {
         MutexType::Lock lock(m_mutex) ;
         YAML::Node node ;
@@ -313,8 +314,11 @@ void FileLogAppender::log(std::shared_ptr<Logger> logger, LogLevel::Level level 
         //     reopen() ;
         //     m_lasttime = now ;
         // }
-        if (! m_filestream || ! exists(m_filename)) {
-                reopen() ;
+        if (! m_filestream ) {
+            m_filestream.open( m_filename ,std::ios::app) ;
+        }
+        if (! exists(m_filename) ) {
+            reopen() ;
         }
         MutexType::Lock lock(m_mutex) ;
         if ( !(m_filestream << m_formatter->format(logger, level, event )) ) {
@@ -777,7 +781,7 @@ ConfigVar<std::set<nnysl::LogDefine> >::ptr g_log_defines =
 
 struct LogIniter {
     LogIniter() {
-        g_log_defines->addListener(0xF501, [](const std::set<LogDefine>& old_value, const std::set<LogDefine>& new_value){
+        g_log_defines->addListener( [](const std::set<LogDefine>& old_value, const std::set<LogDefine>& new_value){
             // asm volatile("int $3") ;
             NNYSL_LOG_INFO(NNYSL_LOG_ROOT()) << "on_logger_conf_changed" ;
             for( auto& i : new_value ) {

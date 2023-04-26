@@ -1,2 +1,6 @@
 2023-04-26 09:13:35	hello system
 
+2023-04-26 10:49:37	 name = logsdescription= logs config typename=St3setIN5nnysl9LogDefineESt4lessIS1_ESaIS1_EE value=- "name: root\nlevel: INFO\nappenders:\n  - type: FileAppender\n    level: UNKNOW\n  - type: StdoutLogAppender\n    level: UNKNOW\n    formatter: \"%d %m %d %m\""
+- "name: system\nlevel: DEBUG\nappenders:\n  - type: FileAppender\n    level: UNKNOW\n  - type: StdoutLogAppender\n    level: UNKNOW\n    formatter: \"%d %d %m\""
+2023-04-26 13:42:06	hello system
+

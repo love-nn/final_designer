@@ -176,6 +176,12 @@ void test_log() {
     
     NNYSL_LOG_INFO(system_log) << "hello system" << std::endl; 
     std::cout << "-----------------------" << std::endl; 
+
+    nnysl::Config::Visit([](nnysl::ConfigVarBase::ptr var) {
+        NNYSL_LOG_DEBUG(NNYSL_LOG_ROOT()) << " name = " << var->getName() 
+        << "description= " << var->getDescription() << " typename=" <<var->getTypeName()
+        << " value=" << var->toString() ;
+    });
 }
 
 int main() {

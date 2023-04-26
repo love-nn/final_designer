@@ -16,6 +16,7 @@
 #include <functional>
 #include <sys/types.h>
 #include "log.h"
+#include "thread.h"
 
 
 
@@ -268,6 +269,7 @@ public:
 template<class T, class FromStr = LexicalCast<std::string, T>, class ToStr = LexicalCast<T, std::string>>
 class ConfigVar : public ConfigVarBase {
 public :
+    typedef RWMutex RWMutexType ;
     typedef std::shared_ptr<ConfigVar> ptr ;
     typedef std::function<void (const T& old_value, const T& new_value)> on_change_cb;
 
@@ -282,6 +284,7 @@ public :
         {
             /* code */
             // return boost::lexical_cast<std::string>(m_val) ;
+            RWMutexType::ReadLock lock (m_mutex) ;
             return ToStr()(m_val) ;
         }
         catch(const std::exception& e)
@@ -311,41 +314,58 @@ public :
         
 
     }
-    const T getValue() const { return m_val ; } 
+    const T getValue()  {
+        RWMutexType::ReadLock lock (m_mutex) ;
+        return m_val ;
+    
+    } 
     void setValue(const T& v) {
-        if ( v == m_val ) {
-            return ;    
+        {
+            RWMutexType::ReadLock lock (m_mutex) ;
+            if ( v == m_val ) {
+                return ;    
+            }
+            for ( auto& i : m_cbs ) {
+                i.second( m_val , v ) ;
+            }
         }
-        for ( auto& i : m_cbs ) {
-            i.second( m_val , v ) ;
-        }
+        RWMutexType::WriteLock lock (m_mutex) ;
         m_val = v ;
         
     } 
     std::string getTypeName() const override { return typeid(T).name(); }
 
     // 增加事件监听
-    void addListener(uint64_t key , on_change_cb callback)  {
-        m_cbs[key] = callback ; 
+    uint64_t addListener(on_change_cb callback)  {
+        static uint64_t s_fun_id = 0 ;
+        RWMutexType::WriteLock lock(m_mutex) ;
+        ++s_fun_id ;
+        m_cbs[s_fun_id] = callback ;
+        return s_fun_id ; 
+
     }
     
     // 删除事件监听
     void delListener(uint64_t key )  {
+        RWMutexType::WriteLock lock(m_mutex) ;
         m_cbs.erase(key) ;
     }
 
     // 获取事件监听
     on_change_cb getListener(uint64_t key )  {
+        RWMutexType::ReadLock lock (m_mutex) ;
         auto it = m_cbs.find(key) ;
         return it == m_cbs.end() ? nullptr : it->second ;
     }
 
     // 清空所有事件监听
     void clearListener() {
+        RWMutexType::WriteLock lock(m_mutex) ;
         m_cbs.clear() ;
     }
     
 private :
+    RWMutexType m_mutex ;
     T m_val ;
     // 变更回调函数组 
     std::map<uint64_t, on_change_cb> m_cbs ;
@@ -358,12 +378,14 @@ class Config {
 public:
  
     typedef std::unordered_map<std::string, ConfigVarBase::ptr> ConfigVarMap ;
+    typedef RWMutex RWMutexType ;
     
 
 
     template<class T> 
     static typename ConfigVar<T>::ptr Lookup(const std::string& name
         , const T& default_value, const std::string& description= "")  {
+        RWMutexType::WriteLock lock(GetMutex()) ;
         auto it = GetDatas().find(name) ;
         if ( it != GetDatas().end() ) {
             auto tmp = std::dynamic_pointer_cast<ConfigVar<T> > ( it->second ) ;
@@ -391,6 +413,7 @@ public:
 
     template<class T>
     static typename ConfigVar<T>::ptr Lookup(const std::string& name )  {
+        RWMutexType::ReadLock lock(GetMutex()) ;
         auto it = GetDatas().find(name) ; 
         if ( it == GetDatas().end() )  return nullptr ;
         return std::dynamic_pointer_cast<ConfigVar<T>>(it->second) ;
@@ -399,13 +422,17 @@ public:
     static void LoadFromYaml(const YAML::Node& root) ;  // 加载yaml 配置
     static ConfigVarBase::ptr LookupBase (const std::string& name ) ;   // 查找Base 
     
+    static void Visit(std::function<void(ConfigVarBase::ptr)> cb) ;
     
 private:
     static ConfigVarMap& GetDatas() {
         static ConfigVarMap m_datas ;
         return m_datas ;
     }
-    
+    static RWMutexType& GetMutex() {
+        static RWMutexType m_mutex ;
+        return m_mutex ;
+    }
 };
 
 
