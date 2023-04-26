@@ -3,4 +3,4 @@ logs:
     level: info
     appenders:
       - type: FileLogAppender
-        file: mutex.txt
+        file: mutex1111.txt

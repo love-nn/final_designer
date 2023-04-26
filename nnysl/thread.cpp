@@ -116,6 +116,7 @@ void* Thread::run(void* arg) {
     cb.swap(thread->m_cb) ;
     
     thread->m_semaphore.notify() ;
+    NNYSL_LOG_DEBUG(g_logger) << "thread start" ;
     cb() ;
     return 0 ;
 }

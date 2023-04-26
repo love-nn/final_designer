@@ -256,7 +256,6 @@ LogFormatter::ptr LogAppender::getFormatter() {
 }
 
 bool FileLogAppender::reopen() {
-    MutexType::Lock lock(m_mutex);
     if ( m_filestream ) {
         m_filestream.close() ;
     }
@@ -264,6 +263,10 @@ bool FileLogAppender::reopen() {
     return !! m_filestream ;
 }
 
+bool FileLogAppender::exists (const std::string& name) {
+  struct stat buffer;   
+  return (stat (name.c_str(), &buffer) == 0); 
+}
 
 std::string FileLogAppender::toYamlString() {
         MutexType::Lock lock(m_mutex) ;
@@ -305,10 +308,17 @@ FileLogAppender::FileLogAppender( const std::string& filename)
 
 void FileLogAppender::log(std::shared_ptr<Logger> logger, LogLevel::Level level , LogEvent::ptr event ) {
     if ( level >= m_level ) {
+        // uint64_t now = time(0) ;
+        // if ( now != m_lasttime ) {
+        //     reopen() ;
+        //     m_lasttime = now ;
+        // }
+        if (! m_filestream || ! exists(m_filename)) {
+                reopen() ;
+        }
         MutexType::Lock lock(m_mutex) ;
-        if ( reopen() ) {
-    
-            m_filestream << m_formatter->format(logger , level , event) ;
+        if ( !(m_filestream << m_formatter->format(logger, level, event )) ) {
+            std::cout << "error" << std::endl ;
         }
         
     }

@@ -49,5 +49,13 @@ force_redefine_file_macro_for_sources(test_thread) #__FILE__
 
 target_link_libraries(test_thread ${LIB_LIB})
 
+
+
+add_executable(test_ofstream test/test_ofstream.cpp)
+add_dependencies(test_ofstream nnysl)
+force_redefine_file_macro_for_sources(test_ofstream) #__FILE__
+
+target_link_libraries(test_ofstream ${LIB_LIB})
+
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)

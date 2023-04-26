@@ -3,6 +3,7 @@
 
 #include <string>
 #include <stdint.h>
+#include <sys/stat.h>
 #include <memory> 
 #include <list>
 #include <sstream>
@@ -244,7 +245,7 @@ class LogAppender {
 friend class Logger ; 
 public :
     typedef std::shared_ptr<LogAppender> ptr;
-    typedef SpinLock MutexType ;
+    typedef CASLock MutexType ;
     virtual ~LogAppender() {} ;
 
     virtual std::string toYamlString() = 0 ;
@@ -270,7 +271,7 @@ class Logger : public std::enable_shared_from_this<Logger> {
 friend class LoggerManager ;
 public :
     typedef std::shared_ptr<Logger> ptr;
-    typedef SpinLock MutexType;
+    typedef CASLock MutexType;
     Logger(const std::string& name = "root" ) ;
 
     void log( LogLevel::Level level, LogEvent::ptr event);
@@ -322,11 +323,12 @@ public:
     FileLogAppender(const std::string& filename ) ;
     virtual void log(std::shared_ptr<Logger> logger , LogLevel::Level level , LogEvent::ptr event) override ;
     std::string toYamlString() override ;
-
+    bool exists(const std::string& name) ;
     bool reopen() ;  // 重新打开文件 成功-1 失败- 0 
 private:
     std::string m_filename ;
     std::ofstream m_filestream ; 
+    uint64_t m_lasttime = 0 ; 
 };
 
 
@@ -334,7 +336,7 @@ private:
 class LoggerManager {
 public:
     LoggerManager() ;
-    typedef SpinLock MutexType ;
+    typedef CASLock MutexType ;
     Logger::ptr getLogger(const std::string& name) ;
     Logger::ptr getRoot() { return m_root ; }
     std::string toYamlString() ;

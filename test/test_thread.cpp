@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
     YAML::Node root = YAML::LoadFile("/home/nnysl/final/final_designer/bin/conf/log2.yaml") ;
     nnysl::Config::LoadFromYaml(root) ;
     std::vector<nnysl::Thread::ptr> threads;
-    for ( int i = 0 ; i < 5 ; ++ i )  {
+    for ( int i = 0 ; i < 10 ; ++ i )  {
         nnysl::Thread::ptr thread (new nnysl::Thread(&fun2, "name_" + std::to_string(i * 2))) ;
         nnysl::Thread::ptr thread2(new nnysl::Thread(&fun3, "name_" + std::to_string(i * 2))) ;
         threads.push_back(thread) ;
